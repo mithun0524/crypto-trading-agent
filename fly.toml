@@ -1,0 +1,33 @@
+# fly.toml — Fly.io app configuration for AlgoPaper trading agent
+# Deploy with: flyctl deploy
+
+app     = "algopaper-agent"
+primary_region = "iad"   # us-east (closest to US market data servers)
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PYTHONUNBUFFERED = "1"
+  PYTHONPATH       = "/app"
+  TZ               = "UTC"
+  # Agent start/stop handled internally by main.py market hours gate.
+  # Fly.io keeps the process alive; the process itself sleeps outside market hours.
+
+# Secrets (set via: flyctl secrets set KEY=value)
+# ALPACA_API_KEY
+# ALPACA_API_SECRET
+# SUPABASE_URL
+# SUPABASE_KEY
+# MODEL_VERSION (optional, defaults to "v1")
+
+[[vm]]
+  size   = "shared-cpu-1x"   # free tier VM
+  memory = "256mb"            # sufficient for 9 symbols + XGBoost inference
+
+# Scale to zero outside market hours.
+# The agent process exits cleanly at 4:01 PM ET via main.py.
+# Fly.io auto_stop_machines = "stop" will stop the VM after the process exits.
+# To restart for the next trading day, use a scheduled trigger:
+#   flyctl scale count 1 --app algopaper-agent
+# Or set up a GitHub Actions cron to call the Fly.io API each morning at 9:20 AM ET.

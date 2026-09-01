@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Agent data caches + trained models
+agent/data_cache/
+agent/models/
+agent/backtest_results/
+
+# Next.js
+dashboard/.next/
+dashboard/node_modules/
+dashboard/out/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
