@@ -1,4 +1,4 @@
-# ── Builder stage ─────────────────────────────────────────────────────────────
+﻿# â”€â”€ Builder stage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
@@ -31,9 +31,9 @@ RUN pip install --no-cache-dir \
     "pytz>=2024.1" \
     "schedule>=1.2.0" \
     "loguru>=0.7.2" \
-    "httpx>=0.26.0"
+    "httpx>=0.26.0" \`n    "websocket-client>=1.8.0"
 
-# ── Runtime stage ─────────────────────────────────────────────────────────────
+# â”€â”€ Runtime stage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -53,8 +53,9 @@ ENV TZ=UTC
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Health check — process is alive if main.py is running
+# Health check â€” process is alive if main.py is running
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
     CMD pgrep -f "python agent/main.py" || exit 1
 
 CMD ["python", "agent/main.py"]
+
