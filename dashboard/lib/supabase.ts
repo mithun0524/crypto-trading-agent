@@ -1,12 +1,12 @@
-// lib/supabase.ts — Supabase client + Realtime hooks for the dashboard
+﻿// lib/supabase.ts â€” Supabase client + Realtime hooks for the dashboard
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl  = (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co');
+const supabaseAnon = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder');
 
 export const supabase = createClient(supabaseUrl, supabaseAnon);
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface LiveQuote {
   symbol:     string;
@@ -53,7 +53,7 @@ export interface ModelVersion {
   notes:      string;
 }
 
-// ── Fetchers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Fetchers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function fetchLiveQuotes(): Promise<LiveQuote[]> {
   const { data } = await supabase
@@ -90,7 +90,7 @@ export async function fetchLatestModelVersion(): Promise<ModelVersion | null> {
   return data?.[0] ?? null;
 }
 
-// ── Realtime subscription helpers ─────────────────────────────────────────────
+// â”€â”€ Realtime subscription helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function subscribeToLiveQuotes(
   onUpdate: (quotes: LiveQuote[]) => void
@@ -125,3 +125,4 @@ export function subscribeToEquity(
 
   return () => { supabase.removeChannel(channel); };
 }
+
