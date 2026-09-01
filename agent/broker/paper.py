@@ -1,5 +1,5 @@
-"""
-broker/paper.py — Paper trading broker.
+﻿"""
+broker/paper.py â€” Paper trading broker.
 
 Handles:
   - Position sizing (ATR-based fixed-fractional)
@@ -24,11 +24,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
     STARTING_CASH, RISK_PER_TRADE_PCT, MAX_POSITION_PCT,
     MAX_OPEN_POSITIONS, DAILY_LOSS_LIMIT_PCT,
-    SLIPPAGE_PCT, COMMISSION_PER_SHARE,
+    SLIPPAGE_PCT, COMMISSION_PCT,
 )
 
 
-# ── Data structures ───────────────────────────────────────────────────────────
+# â”€â”€ Data structures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @dataclass
 class Position:
@@ -61,7 +61,7 @@ class Trade:
     commission:  float = 0.0
 
 
-# ── Paper Broker ──────────────────────────────────────────────────────────────
+# â”€â”€ Paper Broker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class PaperBroker:
     """
@@ -78,7 +78,7 @@ class PaperBroker:
         self._day_start_equity: float            = starting_cash
         self._halted:         bool               = False
 
-    # ── Equity ────────────────────────────────────────────────────────────────
+    # â”€â”€ Equity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def total_equity(self, prices: dict[str, float]) -> float:
         pos_value = sum(
@@ -104,7 +104,7 @@ class PaperBroker:
             "pnl_pct":          round((equity / self.starting_equity - 1) * 100, 2),
         }
 
-    # ── Circuit breaker ───────────────────────────────────────────────────────
+    # â”€â”€ Circuit breaker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def reset_day(self, prices: dict[str, float]):
         """Call at start of each trading day to reset the daily loss counter."""
@@ -119,13 +119,13 @@ class PaperBroker:
         daily_loss = (self._day_start_equity - equity) / self._day_start_equity
         if daily_loss >= DAILY_LOSS_LIMIT_PCT:
             logger.warning(
-                f"🛑 Circuit breaker triggered: daily loss {daily_loss*100:.2f}% "
-                f"≥ {DAILY_LOSS_LIMIT_PCT*100:.1f}%. Halting new trades."
+                f"ðŸ›‘ Circuit breaker triggered: daily loss {daily_loss*100:.2f}% "
+                f"â‰¥ {DAILY_LOSS_LIMIT_PCT*100:.1f}%. Halting new trades."
             )
             self._halted = True
         return self._halted
 
-    # ── Position sizing ───────────────────────────────────────────────────────
+    # â”€â”€ Position sizing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _size_position(self, price: float, atr: float, equity: float) -> float:
         """
@@ -143,7 +143,7 @@ class PaperBroker:
         qty            = min(qty_risk, qty_max)
         return max(1.0, round(qty, 2))
 
-    # ── Order placement ───────────────────────────────────────────────────────
+    # â”€â”€ Order placement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def place_order(
         self,
@@ -161,26 +161,26 @@ class PaperBroker:
         strategy = signal["strategy"]
         equity   = self.total_equity(prices)
 
-        # ── Rejection checks ──────────────────────────────────────────────────
+        # â”€â”€ Rejection checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if action == "HOLD":
             return None
 
         if action == "BUY":
             if self.check_circuit_breaker(prices):
-                logger.debug(f"  [{symbol}] BUY rejected — circuit breaker active")
+                logger.debug(f"  [{symbol}] BUY rejected â€” circuit breaker active")
                 return None
             if symbol in self.positions:
-                logger.debug(f"  [{symbol}] BUY rejected — position already open")
+                logger.debug(f"  [{symbol}] BUY rejected â€” position already open")
                 return None
             if len(self.positions) >= MAX_OPEN_POSITIONS:
-                logger.debug(f"  [{symbol}] BUY rejected — max positions ({MAX_OPEN_POSITIONS}) reached")
+                logger.debug(f"  [{symbol}] BUY rejected â€” max positions ({MAX_OPEN_POSITIONS}) reached")
                 return None
 
             atr = current_bar.get("atr", 0.0)
             qty = self._size_position(current_bar["close"], atr, equity)
             cost = qty * current_bar["close"] * (1 + SLIPPAGE_PCT)
             if cost > self.cash:
-                logger.debug(f"  [{symbol}] BUY rejected — insufficient cash (need ${cost:.0f}, have ${self.cash:.0f})")
+                logger.debug(f"  [{symbol}] BUY rejected â€” insufficient cash (need ${cost:.0f}, have ${self.cash:.0f})")
                 return None
 
         elif action in ("SELL", "CLOSE"):
@@ -202,7 +202,7 @@ class PaperBroker:
         logger.debug(f"  [{symbol}] Order queued: {action} ({strategy})")
         return order
 
-    # ── Order fill (next bar's open) ──────────────────────────────────────────
+    # â”€â”€ Order fill (next bar's open) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def fill_pending_orders(
         self,
@@ -238,11 +238,11 @@ class PaperBroker:
         if action == "BUY":
             qty        = self._size_position(fill_price, order["queued_atr"], equity)
             slip_price = fill_price * (1 + SLIPPAGE_PCT)
-            commission = qty * COMMISSION_PER_SHARE
+            commission = (qty * slip_price) * COMMISSION_PCT
             cost       = qty * slip_price + commission
 
             if cost > self.cash:
-                logger.warning(f"  [{symbol}] BUY fill failed — insufficient cash at fill time")
+                logger.warning(f"  [{symbol}] BUY fill failed â€” insufficient cash at fill time")
                 return None
 
             self.cash -= cost
@@ -254,10 +254,10 @@ class PaperBroker:
                 strategy=strategy,
             )
             logger.info(
-                f"  ✅ BUY  {symbol} {qty:.2f} @ ${slip_price:.2f} "
+                f"  âœ… BUY  {symbol} {qty:.2f} @ ${slip_price:.2f} "
                 f"(cost ${cost:.0f}, cash left ${self.cash:.0f})"
             )
-            return None   # open trade — no closed Trade yet
+            return None   # open trade â€” no closed Trade yet
 
         elif action in ("SELL", "CLOSE"):
             if symbol not in self.positions:
@@ -265,7 +265,7 @@ class PaperBroker:
 
             pos        = self.positions.pop(symbol)
             slip_price = fill_price * (1 - SLIPPAGE_PCT)
-            commission = pos.qty * COMMISSION_PER_SHARE
+            commission = pos.(qty * slip_price) * COMMISSION_PCT
             proceeds   = pos.qty * slip_price - commission
             pnl        = proceeds - pos.qty * pos.entry_price
 
@@ -284,7 +284,7 @@ class PaperBroker:
                 commission=round(commission * 2, 4),
             )
             self.closed_trades.append(trade)
-            emoji = "🟢" if pnl > 0 else "🔴"
+            emoji = "ðŸŸ¢" if pnl > 0 else "ðŸ”´"
             logger.info(
                 f"  {emoji} CLOSE {symbol} {pos.qty:.2f} @ ${slip_price:.2f} "
                 f"P&L ${pnl:.2f} ({pnl/pos.entry_price/pos.qty*100:.2f}%)"
@@ -309,7 +309,7 @@ class PaperBroker:
                 trades.append(t)
         return trades
 
-    # ── Stats ─────────────────────────────────────────────────────────────────
+    # â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def stats(self) -> dict:
         trades = self.closed_trades
@@ -328,3 +328,4 @@ class PaperBroker:
             "avg_loss":      round(sum(losses) / len(losses), 2) if losses else 0,
             "profit_factor": round(-sum(wins) / sum(losses), 3) if losses and sum(losses) != 0 else 0,
         }
+
