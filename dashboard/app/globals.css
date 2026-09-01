@@ -1,4 +1,4 @@
-﻿/* app/globals.css -- CryptoPaper dark neon theme */
+/* app/globals.css -- CryptoPaper dark neon theme */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
@@ -77,3 +77,4 @@ h1, h2, h3, h4 {
 .table-row-hover:hover { background: var(--surface-hover); transition: background 0.15s ease; }
 .text-up   { color: var(--neon-green); }
 .text-down { color: var(--danger); }
+
