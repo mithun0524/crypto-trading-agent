@@ -265,7 +265,7 @@ class PaperBroker:
 
             pos        = self.positions.pop(symbol)
             slip_price = fill_price * (1 - SLIPPAGE_PCT)
-            commission = pos.(qty * slip_price) * COMMISSION_PCT
+            commission = (pos.qty * slip_price) * COMMISSION_PCT
             proceeds   = pos.qty * slip_price - commission
             pnl        = proceeds - pos.qty * pos.entry_price
 
@@ -328,4 +328,5 @@ class PaperBroker:
             "avg_loss":      round(sum(losses) / len(losses), 2) if losses else 0,
             "profit_factor": round(-sum(wins) / sum(losses), 3) if losses and sum(losses) != 0 else 0,
         }
+
 
