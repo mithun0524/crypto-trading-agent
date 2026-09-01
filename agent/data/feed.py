@@ -80,7 +80,7 @@ class BinanceFeed:
         
         # Build stream URL for all symbols
         streams = [f"{s}@kline_1m" for s in BINANCE_SYMBOLS.values()]
-        self.ws_url = f"wss://stream.binance.com:9443/ws/{'/'.join(streams)}"
+        self.ws_url = f"wss://stream.binance.us:9443/ws/{'/'.join(streams)}"
 
     def start(self):
         self._running = True
@@ -204,3 +204,4 @@ class LiveFeed:
                 logger.info(f"  {sym}: {len(raw)} warmup bars loaded")
             except Exception as exc:
                 logger.error(f"  {sym}: warmup failed: {exc}")
+
