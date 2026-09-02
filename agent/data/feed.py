@@ -43,14 +43,15 @@ REV_BINANCE_SYMBOLS = {v: k for k, v in BINANCE_SYMBOLS.items()}
 class BarBuffer:
     """Fixed-length deque of bars per symbol."""
 
-    def __init__(self, maxlen: int = 500):
+    def __init__(self, maxlen: int = 15_000):
+        """Hold up to 15,000 1-min bars per symbol (~10 days) so we can resample to 200+ hourly bars."""
         self._data: dict[str, collections.deque] = {
             s: collections.deque(maxlen=maxlen) for s in SYMBOLS
         }
 
     def push(self, symbol: str, bar: dict):
         if symbol not in self._data:
-            self._data[symbol] = collections.deque(maxlen=500)
+            self._data[symbol] = collections.deque(maxlen=15_000)
         self._data[symbol].append(bar)
 
     def ready(self, symbol: str, n: int) -> bool:
@@ -166,8 +167,12 @@ class LiveFeed:
         logger.info("LiveFeed stopped.")
 
     def warmup_from_history(self):
-        """Seed the buffer with recent historical bars via yfinance."""
-        logger.info(f"Warming up bar buffers ({WARM_UP_BARS} bars per symbol) ...")
+        """
+        Seed the buffer with recent historical 1-minute bars via yfinance.
+        We load 5 days of 1-min data (~7,200 bars), which gives ~120 hourly bars
+        after resampling in main.py -- well above the 26-bar minimum for all indicators.
+        """
+        logger.info(f"Warming up bar buffers (1-min history, last 5d) ...")
         for sym in SYMBOLS:
             yf_sym = YFINANCE_SYMBOLS.get(sym, sym)
             try:
@@ -188,7 +193,6 @@ class LiveFeed:
                 raw.columns = [c.lower() for c in raw.columns]
                 raw.index = pd.to_datetime(raw.index, utc=True)
                 raw.sort_index(inplace=True)
-                raw = raw.tail(WARM_UP_BARS)
 
                 for ts, row in raw.iterrows():
                     b = {
@@ -204,4 +208,7 @@ class LiveFeed:
                 logger.info(f"  {sym}: {len(raw)} warmup bars loaded")
             except Exception as exc:
                 logger.error(f"  {sym}: warmup failed: {exc}")
+
+
+
 

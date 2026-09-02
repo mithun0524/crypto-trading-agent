@@ -2,10 +2,11 @@
 main.py -- CryptoPaper live trading agent entry point.
 
 24/7 continuous loop (crypto never sleeps):
-  Alpaca Crypto WebSocket -> rolling buffer -> features -> model -> router -> broker -> Supabase
+  Binance WebSocket -> 1-min rolling buffer -> resample to 1h -> features -> model -> router -> broker -> Supabase
 """
 from __future__ import annotations
 
+import pandas as pd
 import datetime as dt
 import signal
 import sys
@@ -58,6 +59,23 @@ class TradingAgent:
         logger.success("Agent ready. Trading 24/7...")
         self._started = True
 
+    @staticmethod
+    def _resample_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Resample 1-min OHLCV bars to 1-hour bars so the hourly-trained model
+        sees correctly scaled indicators (ATR, EMA, RSI, MACD, etc.).
+        """
+        if df.index.tz is None:
+            df.index = df.index.tz_localize("UTC")
+        hourly = df.resample("1h").agg({
+            "open":   "first",
+            "high":   "max",
+            "low":    "min",
+            "close":  "last",
+            "volume": "sum",
+        }).dropna()
+        return hourly
+
     def _on_bar(self, symbol: str, bar: dict):
         """Called on every incoming bar for every subscribed symbol."""
         with self._lock:
@@ -67,7 +85,7 @@ class TradingAgent:
             if ts.tzinfo is None:
                 ts = ts.replace(tzinfo=dt.timezone.utc)
 
-            # Persist bar
+            # Persist raw 1-min bar
             if SUPABASE_URL:
                 upsert_bar(symbol, bar)
 
@@ -85,33 +103,37 @@ class TradingAgent:
             regime = "FLAT"
             signal_result = {"action": "HOLD", "strategy": "none", "reason": ""}
 
-            if self.feed.buffer.ready(symbol, WARM_UP_BARS):
+            # Need >= 60 min-bars to resample into at least 1 complete hourly bar
+            if self.feed.buffer.ready(symbol, 60):
                 bars_df = self.feed.buffer.to_dataframe(symbol)
                 try:
-                    feat_df = compute_features(bars_df)
-                    if not feat_df.empty:
-                        regime, model_ver = predict(feat_df)
-                        open_pos = symbol in self.broker.positions
-                        signal_result = route(regime, symbol, feat_df, open_position=open_pos)
+                    # ── Resample 1-min → 1h so model sees correct feature scale ──
+                    hourly_df = self._resample_to_hourly(bars_df)
+                    if len(hourly_df) >= 2:
+                        feat_df = compute_features(hourly_df)
+                        if not feat_df.empty:
+                            regime, model_ver = predict(feat_df)
+                            open_pos = symbol in self.broker.positions
+                            signal_result = route(regime, symbol, feat_df, open_position=open_pos)
 
-                        curr_bar_dict = {
-                            "close": close,
-                            "open":  float(bar["open"]),
-                            "atr":   float(feat_df.iloc[-1].get("atr", 0.0))
-                                     if "atr" in feat_df.columns else 0.0,
-                        }
-                        order = self.broker.place_order(
-                            signal_result, curr_bar_dict, {symbol: close}, model_ver
-                        )
-
-                        if SUPABASE_URL:
-                            upsert_signal(
-                                symbol, ts, regime,
-                                signal_result["strategy"],
-                                signal_result["action"],
-                                signal_result.get("reason", ""),
-                                model_ver,
+                            curr_bar_dict = {
+                                "close": close,
+                                "open":  float(bar["open"]),
+                                "atr":   float(feat_df.iloc[-1].get("atr", 0.0))
+                                         if "atr" in feat_df.columns else 0.0,
+                            }
+                            order = self.broker.place_order(
+                                signal_result, curr_bar_dict, {symbol: close}, model_ver
                             )
+
+                            if SUPABASE_URL:
+                                upsert_signal(
+                                    symbol, ts, regime,
+                                    signal_result["strategy"],
+                                    signal_result["action"],
+                                    signal_result.get("reason", ""),
+                                    model_ver,
+                                )
                 except Exception as exc:
                     logger.error(f"Signal generation error [{symbol}]: {exc}")
 
