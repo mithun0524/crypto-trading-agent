@@ -1,5 +1,5 @@
-"use client";
-// components/EquityCurve.tsx — Live equity curve vs SPY buy-and-hold benchmark
+﻿"use client";
+// components/EquityCurve.tsx â€” Live equity curve vs SPY buy-and-hold benchmark
 
 import { useEffect, useState } from "react";
 import {
@@ -7,7 +7,7 @@ import {
   CartesianGrid, Tooltip
 } from "recharts";
 import { fetchEquityCurve, subscribeToEquity, EquityPoint } from "@/lib/supabase";
-import { TrendingUp, Moon } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 const STARTING_EQUITY = 100_000;
 
@@ -149,3 +149,4 @@ export default function EquityCurve() {
     </div>
   );
 }
+

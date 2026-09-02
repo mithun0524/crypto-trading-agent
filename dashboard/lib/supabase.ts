@@ -1,4 +1,4 @@
-﻿// lib/supabase.ts â€” Supabase client + Realtime hooks for the dashboard
+﻿// lib/supabase.ts – Supabase client + Realtime hooks for the crypto dashboard
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl  = (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co');
@@ -6,22 +6,28 @@ const supabaseAnon = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
 
 export const supabase = createClient(supabaseUrl, supabaseAnon);
 
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Types ────────────────────────────────────────────────────────────────────
 
 export interface LiveQuote {
   symbol:     string;
-  ts:         string;
-  last_price: number;
+  // DB columns: price, updated_at, change_pct, volume, regime
+  updated_at: string;
+  price:      number;
+  last_price: number;   // alias – populated from price in fetchLiveQuotes()
+  ts:         string;   // alias – populated from updated_at
   change_pct: number;
   volume:     number;
-  regime:     "TREND_UP" | "TREND_DOWN" | "RANGE" | "BREAKOUT" | "FLAT";
+  regime:     string;
 }
 
 export interface EquityPoint {
   ts:              string;
   cash:            number;
-  positions_value: number;
-  total_equity:    number;
+  portfolio:       number;   // DB column is "portfolio"
+  total:           number;   // DB column is "total"
+  // Dashboard aliases
+  positions_value: number;   // = portfolio
+  total_equity:    number;   // = total
 }
 
 export interface Trade {
@@ -53,31 +59,44 @@ export interface ModelVersion {
   notes:      string;
 }
 
-// â”€â”€ Fetchers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Fetchers ─────────────────────────────────────────────────────────────────
 
 export async function fetchLiveQuotes(): Promise<LiveQuote[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("crypto_live_quotes")
     .select("*")
     .order("symbol");
-  return (data ?? []) as LiveQuote[];
+  if (error) console.error("fetchLiveQuotes error:", error);
+  // Normalise: add dashboard-expected aliases for price → last_price, updated_at → ts
+  return ((data ?? []) as any[]).map((row) => ({
+    ...row,
+    last_price: row.price,
+    ts:         row.updated_at,
+  })) as LiveQuote[];
 }
 
 export async function fetchEquityCurve(limit = 500): Promise<EquityPoint[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("crypto_equity_curve")
     .select("*")
     .order("ts", { ascending: false })
     .limit(limit);
-  return ((data ?? []) as EquityPoint[]).reverse();
+  if (error) console.error("fetchEquityCurve error:", error);
+  // Normalise: add aliases for total → total_equity, portfolio → positions_value
+  return (((data ?? []) as any[]).map((row) => ({
+    ...row,
+    total_equity:    row.total,
+    positions_value: row.portfolio,
+  })) as EquityPoint[]).reverse();
 }
 
 export async function fetchTrades(limit = 200): Promise<Trade[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("crypto_trades")
     .select("*")
-    .order("exit_ts", { ascending: false })
+    .order("ts", { ascending: false })
     .limit(limit);
+  if (error) console.error("fetchTrades error:", error);
   return (data ?? []) as Trade[];
 }
 
@@ -90,7 +109,7 @@ export async function fetchLatestModelVersion(): Promise<ModelVersion | null> {
   return data?.[0] ?? null;
 }
 
-// â”€â”€ Realtime subscription helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Realtime subscription helpers ────────────────────────────────────────────
 
 export function subscribeToLiveQuotes(
   onUpdate: (quotes: LiveQuote[]) => void
@@ -98,9 +117,8 @@ export function subscribeToLiveQuotes(
   // Initial fetch
   fetchLiveQuotes().then(onUpdate);
 
-  // Subscribe to changes on live_quotes table
   const channel = supabase
-    .channel(`live_quotes_changes_${Math.random()}`)
+    .channel(`crypto_quotes_${Math.random()}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "crypto_live_quotes" },
@@ -115,14 +133,20 @@ export function subscribeToEquity(
   onUpdate: (point: EquityPoint) => void
 ) {
   const channel = supabase
-    .channel(`equity_changes_${Math.random()}`)
+    .channel(`crypto_equity_${Math.random()}`)
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "crypto_equity_curve" },
-      (payload) => onUpdate(payload.new as EquityPoint)
+      (payload) => {
+        const row = payload.new as any;
+        onUpdate({
+          ...row,
+          total_equity:    row.total,
+          positions_value: row.portfolio,
+        } as EquityPoint);
+      }
     )
     .subscribe();
 
   return () => { supabase.removeChannel(channel); };
 }
-

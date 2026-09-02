@@ -1,16 +1,16 @@
-"use client";
-// components/MarketWatch.tsx — Live 9-symbol market watch ticker bar
+﻿"use client";
+// components/MarketWatch.tsx â€” Live 9-symbol market watch ticker bar
 // Updates in real-time via Supabase Realtime WebSocket
 
 import { useEffect, useState, useRef } from "react";
 import { subscribeToLiveQuotes, LiveQuote } from "@/lib/supabase";
 
 const REGIME_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  TREND_UP:   { label: "↑ UP",    color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  TREND_DOWN: { label: "↓ DOWN",  color: "text-red-500",     bg: "bg-red-500/10"     },
-  RANGE:      { label: "⟺ RANG",  color: "text-amber-500",   bg: "bg-amber-500/10"   },
-  BREAKOUT:   { label: "⚡ BRK",   color: "text-blue-500",    bg: "bg-blue-500/10"    },
-  FLAT:       { label: "— FLAT",  color: "text-slate-400",   bg: "bg-slate-800"      },
+  TREND_UP:   { label: "â†‘ UP",    color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  TREND_DOWN: { label: "â†“ DOWN",  color: "text-red-500",     bg: "bg-red-500/10"     },
+  RANGE:      { label: "âŸº RANG",  color: "text-amber-500",   bg: "bg-amber-500/10"   },
+  BREAKOUT:   { label: "âš¡ BRK",   color: "text-blue-500",    bg: "bg-blue-500/10"    },
+  FLAT:       { label: "â€” FLAT",  color: "text-slate-400",   bg: "bg-slate-800"      },
 };
 
 function SparkLine({ data }: { data: number[] }) {
@@ -119,3 +119,4 @@ export default function MarketWatch() {
     </div>
   );
 }
+
