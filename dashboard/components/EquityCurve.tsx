@@ -48,7 +48,7 @@ export default function EquityCurve() {
   const processPoints = (points: EquityPoint[]) => {
     const chartData = points.map((p) => ({
       ts:     new Date(p.ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-      equity: p.total_equity,
+      equity: p.total,
       label:  p.ts,
     }));
     setData(chartData);
@@ -70,7 +70,7 @@ export default function EquityCurve() {
           ...prev,
           {
             ts:     new Date(point.ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-            equity: point.total_equity,
+            equity: point.total,
             label:  point.ts,
           },
         ].slice(-500);

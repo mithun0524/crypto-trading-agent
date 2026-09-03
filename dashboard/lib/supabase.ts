@@ -20,8 +20,8 @@ export interface LiveQuote {
 export interface EquityPoint {
   ts:              string;
   cash:            number;
-  positions_value: number;
-  total_equity:    number;
+  portfolio: number;
+  total:    number;
 }
 
 export interface Trade {
