@@ -116,9 +116,9 @@ export default function EquityCurve() {
       {data.length === 0 ? (
         <div className="flex-1 min-h-[300px] flex items-center justify-center relative z-10 border border-slate-800 border-dashed rounded-lg bg-slate-900/30">
           <div className="flex flex-col items-center gap-3 text-slate-500">
-            <Moon className="w-8 h-8" />
-            <p className="font-medium text-sm">Market is Closed</p>
-            <p className="text-xs text-center max-w-[200px]">Agent streams data and executes trades during market hours.</p>
+            <div className="w-8 h-8 rounded-full border-4 border-slate-700 border-t-slate-400 animate-spin" />
+            <p className="font-medium text-sm">Waiting for market data...</p>
+            <p className="text-xs text-center max-w-[200px]">The agent will plot the equity curve once the first trade is executed.</p>
           </div>
         </div>
       ) : (
