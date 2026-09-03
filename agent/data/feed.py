@@ -128,23 +128,23 @@ class BinanceFeed:
 
         def on_close(ws, close_status_code, close_msg):
             logger.warning("Binance WS Closed.")
-            # Auto-reconnect if still supposed to be running
-            if self._running:
-                logger.info("Reconnecting Binance WS in 5s...")
-                time.sleep(5)
-                self._run_ws()
 
         def on_open(ws):
             logger.info("Binance WS Connected!")
 
-        self.ws = websocket.WebSocketApp(
-            self.ws_url,
-            on_open=on_open,
-            on_message=on_message,
-            on_error=on_error,
-            on_close=on_close
-        )
-        self.ws.run_forever()
+        while self._running:
+            self.ws = websocket.WebSocketApp(
+                self.ws_url,
+                on_open=on_open,
+                on_message=on_message,
+                on_error=on_error,
+                on_close=on_close
+            )
+            self.ws.run_forever()
+            
+            if self._running:
+                logger.info("Reconnecting Binance WS in 5s...")
+                time.sleep(5)
 
 
 # -- Unified LiveFeed ---------------------------------------------------------

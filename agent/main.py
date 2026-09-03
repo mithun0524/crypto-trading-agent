@@ -37,6 +37,7 @@ class TradingAgent:
 
     def __init__(self):
         self.broker = PaperBroker()
+        self.db_executor = concurrent.futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="db")
         self.feed   = LiveFeed(on_bar=self._on_bar)
         self._shutdown = False
         self._lock     = threading.Lock()
@@ -127,7 +128,8 @@ class TradingAgent:
                             )
 
                             if SUPABASE_URL:
-                                upsert_signal(
+                                self.db_executor.submit(
+                                        upsert_signal,
                                     symbol, ts, regime,
                                     signal_result["strategy"],
                                     signal_result["action"],
@@ -139,7 +141,7 @@ class TradingAgent:
 
             # Persist live quote + equity snapshot
             if SUPABASE_URL:
-                upsert_live_quote(symbol, close, 0.0, int(bar.get("volume", 0)), regime)
+                self.db_executor.submit(upsert_live_quote, symbol, close, 0.0, int(bar.get("volume", 0)), regime)
                 snap = self.broker.snapshot({symbol: close})
                 upsert_equity(ts, snap)
 

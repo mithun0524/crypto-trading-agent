@@ -30,6 +30,7 @@ def get_client():
 
 # -- Bar writes ---------------------------------------------------------------
 
+@with_retry()
 def upsert_bar(symbol: str, bar: dict) -> None:
     ts = bar["ts"]
     if isinstance(ts, dt.datetime):
@@ -51,6 +52,7 @@ def upsert_bar(symbol: str, bar: dict) -> None:
 
 # -- Signal writes ------------------------------------------------------------
 
+@with_retry()
 def upsert_signal(
     symbol: str,
     ts: dt.datetime,
@@ -77,6 +79,7 @@ def upsert_signal(
 
 # -- Trade writes -------------------------------------------------------------
 
+@with_retry()
 def insert_trade(trade: Any) -> None:
     row = {
         "symbol":   trade.symbol,
@@ -96,6 +99,7 @@ def insert_trade(trade: Any) -> None:
 
 # -- Equity curve writes ------------------------------------------------------
 
+@with_retry()
 def upsert_equity(ts: dt.datetime, snap: dict) -> None:
     row = {
         "ts":        ts.isoformat() if isinstance(ts, dt.datetime) else str(ts),
@@ -111,6 +115,7 @@ def upsert_equity(ts: dt.datetime, snap: dict) -> None:
 
 # -- Live quote writes --------------------------------------------------------
 
+@with_retry()
 def upsert_live_quote(
     symbol: str,
     last_price: float,
