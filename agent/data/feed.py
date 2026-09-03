@@ -73,9 +73,11 @@ class BarBuffer:
 class BinanceFeed:
     """Connects to Binance public websocket for free, real-time 1m bars."""
 
-    def __init__(self, on_bar: BarCallback, buffer: BarBuffer):
+    def __init__(self, on_bar: BarCallback, buffer: BarBuffer, on_tick=None):
         self.on_bar = on_bar
         self.buffer = buffer
+        self.on_tick = on_tick
+        self._last_tick_time = collections.defaultdict(float)
         self.ws = None
         self._running = False
         
@@ -111,6 +113,13 @@ class BinanceFeed:
                     if not alpaca_sym:
                         return
                         
+
+                    if self.on_tick:
+                        now = time.time()
+                        if now - self._last_tick_time[alpaca_sym] >= 1.0:
+                            self._last_tick_time[alpaca_sym] = now
+                            self.on_tick(alpaca_sym, float(kline["c"]), float(kline["v"]))
+
                     bar = {
                         # Convert ms timestamp to datetime
                         "ts": pd.to_datetime(kline["T"], unit="ms", utc=True).to_pydatetime(),
@@ -154,9 +163,9 @@ class LiveFeed:
     Unified live feed. Uses Binance Public WebSockets.
     """
 
-    def __init__(self, on_bar: BarCallback):
+    def __init__(self, on_bar: BarCallback, on_tick=None):
         self.buffer = BarBuffer()
-        self._binance = BinanceFeed(on_bar, self.buffer)
+        self._binance = BinanceFeed(on_bar, self.buffer, on_tick=on_tick)
         self._using_alpaca = False  # Not using Alpaca anymore!
 
     def start(self):

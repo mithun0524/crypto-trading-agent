@@ -39,7 +39,8 @@ class TradingAgent:
     def __init__(self):
         self.broker = PaperBroker()
         self.db_executor = concurrent.futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="db")
-        self.feed   = LiveFeed(on_bar=self._on_bar)
+        self.feed   = LiveFeed(on_bar=self._on_bar, on_tick=self._on_tick)
+        self.latest_regimes = {s: "FLAT" for s in SYMBOLS}
         self._shutdown = False
         self._lock     = threading.Lock()
         self._started  = False
@@ -77,6 +78,12 @@ class TradingAgent:
             "volume": "sum",
         }).dropna()
         return hourly
+
+    
+    def _on_tick(self, symbol: str, close: float, volume: float):
+        if SUPABASE_URL:
+            regime = self.latest_regimes.get(symbol, "FLAT")
+            self.db_executor.submit(upsert_live_quote, symbol, close, 0.0, int(volume), regime)
 
     def _on_bar(self, symbol: str, bar: dict):
         """Called on every incoming bar for every subscribed symbol."""
@@ -142,7 +149,7 @@ class TradingAgent:
 
             # Persist live quote + equity snapshot
             if SUPABASE_URL:
-                self.db_executor.submit(upsert_live_quote, symbol, close, 0.0, int(bar.get("volume", 0)), regime)
+                
                 snap = self.broker.snapshot({symbol: close})
                 upsert_equity(ts, snap)
 
