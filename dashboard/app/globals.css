@@ -1,80 +1,36 @@
-/* app/globals.css -- CryptoPaper dark neon theme */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+/* app/globals.css */
 @import "tailwindcss";
 
 :root {
-  --background:    #04040F;
-  --surface:       #0A0A1A;
-  --surface-2:     #10102A;
-  --surface-hover: #16163A;
-  --border:        rgba(99, 102, 241, 0.15);
-  --foreground:    #E8E8FF;
-  --text-muted:    #6B7DB3;
-  --accent:        #6366F1;
-  --accent-glow:   rgba(99, 102, 241, 0.3);
-  --neon-green:    #00FFA3;
-  --neon-purple:   #A855F7;
-  --neon-blue:     #38BDF8;
-  --success:       #00FFA3;
-  --danger:        #FF4D6D;
-  --warning:       #FBBF24;
-  --info:          #38BDF8;
+  --background: #020617; /* Slate 950 / Deepest Slate */
+  --surface: #0F172A;    /* Slate 900 */
+  --surface-hover: #1E293B; /* Slate 800 */
+  --foreground: #F8FAFC; /* Slate 50 */
+  --text-muted: #94A3B8; /* Slate 400 */
+  
+  --success: #22C55E; /* Emerald 500 */
+  --danger: #EF4444;  /* Red 500 */
+  --warning: #F59E0B; /* Amber 500 */
+  --info: #3B82F6;    /* Blue 500 */
 }
 
-* { box-sizing: border-box; }
-
 body {
-  font-family: "Inter", system-ui, sans-serif;
   background: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
-  background-image:
-    radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.06) 0%, transparent 60%);
-  min-height: 100vh;
 }
 
-h1, h2, h3, h4 {
-  font-family: "Space Grotesk", system-ui, sans-serif;
+/* Hide scrollbar */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
-.glass {
-  background: rgba(10, 10, 26, 0.7);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 12px;
-}
-
-.neon-text { color: var(--neon-green); text-shadow: 0 0 20px rgba(0,255,163,0.5); }
-.neon-text-purple { color: var(--neon-purple); text-shadow: 0 0 20px rgba(168,85,247,0.4); }
-
-.accent-border {
-  border: 1px solid var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow), inset 0 0 12px rgba(99,102,241,0.05);
-}
-
-.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
-.scrollbar-none::-webkit-scrollbar { display: none; }
-
+/* Scroll fade mask */
 .mask-fade-edges {
   mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
 }
-
-@keyframes pulse-neon {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-.live-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--neon-green);
-  box-shadow: 0 0 8px var(--neon-green);
-  animation: pulse-neon 2s ease-in-out infinite;
-  display: inline-block;
-}
-
-.table-row-hover:hover { background: var(--surface-hover); transition: background 0.15s ease; }
-.text-up   { color: var(--neon-green); }
-.text-down { color: var(--danger); }
-

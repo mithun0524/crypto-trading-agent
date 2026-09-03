@@ -20,9 +20,9 @@ export default function PositionsTable({ positions }: PositionsTableProps) {
   const [quotes, setQuotes] = useState<Record<string, LiveQuote>>({});
 
   useEffect(() => {
-    const unsub = subscribeToLiveQuotes((q) => {
+    const unsub = subscribeToLiveQuotes((q: LiveQuote[]) => {
       const map: Record<string, LiveQuote> = {};
-      q.forEach((quote) => (map[quote.symbol] = quote));
+      q.forEach((quote: LiveQuote) => (map[quote.symbol] = quote));
       setQuotes(map);
     });
     return unsub;

@@ -1,65 +1,31 @@
-﻿import MarketWatch from "@/components/MarketWatch";
+// app/page.tsx — Overview page: equity curve + regime grid
 import EquityCurve from "@/components/EquityCurve";
-import RegimeGrid from "@/components/RegimeGrid";
+import RegimeGrid  from "@/components/RegimeGrid";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export const metadata = {
+  title: "Overview · AlgoPaper",
+};
+
+export default function OverviewPage() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 sm:space-y-8">
+      {/* Page title */}
       <div>
-        <h1
-          style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: "1.6rem",
-            fontWeight: 700,
-            background: "linear-gradient(135deg, #E8E8FF 0%, #A855F7 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            marginBottom: "4px",
-          }}
-        >
-          Crypto Trading Dashboard
-        </h1>
-        <p style={{ color: "#6B7DB3", fontSize: "0.875rem" }}>
-          AI-powered paper trading · BTC · ETH · SOL · DOGE · 24/7 live
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Overview</h1>
+        <p className="text-slate-400 text-xs sm:text-sm mt-1 sm:mt-1.5">
+          Live paper portfolio performance and AI-predicted market regimes
         </p>
       </div>
 
-      {/* Live Crypto Prices */}
-      <MarketWatch />
-
-      {/* Equity Curve */}
-      <div>
-        <h2
-          style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 600,
-            fontSize: "1rem",
-            color: "#E8E8FF",
-            marginBottom: "12px",
-          }}
-        >
-          Portfolio Performance
-        </h2>
-        <EquityCurve />
-      </div>
-
-      {/* Regime signals */}
-      <div>
-        <h2
-          style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 600,
-            fontSize: "1rem",
-            color: "#E8E8FF",
-            marginBottom: "12px",
-          }}
-        >
-          AI Regime Signals
-        </h2>
-        <RegimeGrid />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 flex flex-col">
+          <EquityCurve />
+        </div>
+        <div className="lg:col-span-1 flex flex-col">
+          <RegimeGrid />
+        </div>
       </div>
     </div>
   );

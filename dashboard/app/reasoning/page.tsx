@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { fetchSignals, CryptoSignal } from "@/lib/supabase";
+import { fetchSignals, TradingSignal } from "@/lib/supabase";
 
 export default function ReasoningPage() {
-  const [signals, setSignals] = useState<CryptoSignal[]>([]);
+  const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,57 +17,67 @@ export default function ReasoningPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Bot Reasoning Log</h1>
-          <p className="text-gray-400 mt-1">Review the raw internal decisions of the trading agent, including reasons for holding.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            Bot <span className="text-blue-500">Reasoning</span>
+          </h1>
+          <p className="text-slate-400 mt-1">
+            Review the internal decisions of the trading agent across all live market evaluations.
+          </p>
         </div>
       </div>
 
-      <div className="bg-[#111] rounded-xl border border-white/5 overflow-hidden">
+      <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-lg">
         <div className="overflow-x-auto w-full">
-          <table className="w-full text-sm text-left text-gray-300">
-            <thead className="text-xs uppercase bg-black/40 text-gray-400 border-b border-white/5">
+          <table className="w-full text-sm text-left text-slate-300">
+            <thead className="text-xs uppercase bg-slate-950 text-slate-400 border-b border-slate-800">
               <tr>
-                <th className="px-6 py-4 font-medium">Time</th>
-                <th className="px-6 py-4 font-medium">Symbol</th>
-                <th className="px-6 py-4 font-medium">Regime</th>
-                <th className="px-6 py-4 font-medium">Strategy</th>
-                <th className="px-6 py-4 font-medium">Action</th>
-                <th className="px-6 py-4 font-medium">Reasoning</th>
+                <th className="px-6 py-4 font-semibold tracking-wider">Time</th>
+                <th className="px-6 py-4 font-semibold tracking-wider">Symbol</th>
+                <th className="px-6 py-4 font-semibold tracking-wider">Regime</th>
+                <th className="px-6 py-4 font-semibold tracking-wider">Strategy</th>
+                <th className="px-6 py-4 font-semibold tracking-wider">Action</th>
+                <th className="px-6 py-4 font-semibold tracking-wider">Reasoning</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                     Loading logs...
                   </td>
                 </tr>
               ) : signals.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                     No signals found.
                   </td>
                 </tr>
               ) : (
                 signals.map((sig) => (
-                  <tr key={sig.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-400">
+                  <tr key={sig.id} className="hover:bg-slate-800/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-400">
                       {new Date(sig.created_at).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 font-bold text-white">{sig.symbol}</td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-white/5 rounded text-xs">{sig.regime}</span>
+                      <span className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">
+                        {sig.regime}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 capitalize">{sig.strategy}</td>
+                    <td className="px-6 py-4 capitalize font-mono text-xs">{sig.strategy}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={\ont-medium \\}
+                        className={`font-semibold ${
+                          sig.action === "BUY" ? "text-emerald-500" :
+                          sig.action === "SELL" || sig.action === "CLOSE" ? "text-red-500" :
+                          "text-slate-500"
+                        }`}
                       >
                         {sig.action}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-400 max-w-md truncate" title={sig.reason}>
-                      {sig.reason}
+                    <td className="px-6 py-4 text-slate-400 max-w-md truncate" title={sig.reason}>
+                      {sig.reason || "—"}
                     </td>
                   </tr>
                 ))
