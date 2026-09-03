@@ -56,7 +56,7 @@ export default function ReasoningPage() {
                 signals.map((sig) => (
                   <tr key={sig.id} className="hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-slate-400">
-                      {new Date(sig.created_at).toLocaleString()}
+                      {new Date(sig.ts).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 font-bold text-white">{sig.symbol}</td>
                     <td className="px-6 py-4">
@@ -68,12 +68,12 @@ export default function ReasoningPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`font-semibold ${
-                          sig.action === "BUY" ? "text-emerald-500" :
-                          sig.action === "SELL" || sig.action === "CLOSE" ? "text-red-500" :
+                          sig.raw_signal === "BUY" ? "text-emerald-500" :
+                          sig.raw_signal === "SELL" || sig.raw_signal === "CLOSE" ? "text-red-500" :
                           "text-slate-500"
                         }`}
                       >
-                        {sig.action}
+                        {sig.raw_signal}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-400 max-w-md truncate" title={sig.reason}>
