@@ -112,11 +112,16 @@ export async function fetchLatestModelVersion(): Promise<ModelVersion | null> {
 
 // ── Realtime subscription helpers ─────────────────────────────────────────────
 
+let currentQuotes: LiveQuote[] = [];
+
 export function subscribeToLiveQuotes(
-  onUpdate: any
+  onUpdate: (quotes: LiveQuote[]) => void
 ) {
   // Initial fetch
-  fetchLiveQuotes().then(onUpdate);
+  fetchLiveQuotes().then((quotes) => {
+    currentQuotes = quotes;
+    onUpdate(currentQuotes);
+  });
 
   // Subscribe to changes on live_quotes table
   const channel = supabase
@@ -126,17 +131,19 @@ export function subscribeToLiveQuotes(
       { event: "*", schema: "public", table: "live_quotes" },
       (payload) => {
         if (payload.new && Object.keys(payload.new).length > 0) {
-          onUpdate((prev: LiveQuote[]) => {
-            const idx = prev.findIndex(q => q.symbol === (payload.new as LiveQuote).symbol);
-            if (idx >= 0) {
-              const updated = [...prev];
-              updated[idx] = payload.new as LiveQuote;
-              return updated;
-            }
-            return [...prev, payload.new as LiveQuote];
-          });
+          const newQuote = payload.new as LiveQuote;
+          const idx = currentQuotes.findIndex(q => q.symbol === newQuote.symbol);
+          if (idx >= 0) {
+            currentQuotes[idx] = newQuote;
+          } else {
+            currentQuotes.push(newQuote);
+          }
+          onUpdate([...currentQuotes]);
         } else {
-          fetchLiveQuotes().then(onUpdate);
+          fetchLiveQuotes().then((quotes) => {
+            currentQuotes = quotes;
+            onUpdate(currentQuotes);
+          });
         }
       }
     )
