@@ -11,6 +11,28 @@ from typing import Any
 
 from loguru import logger
 
+import time
+import functools
+
+def with_retry(max_retries=3, delay=1.0, backoff=2.0):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            current_delay = delay
+            for attempt in range(1, max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == max_retries:
+                        logger.error(f"Supabase {func.__name__} failed after {max_retries} attempts: {e}")
+                        raise
+                    logger.warning(f"Supabase {func.__name__} attempt {attempt} failed ({e}). Retrying in {current_delay}s...")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+        return wrapper
+    return decorator
+
+
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
