@@ -148,8 +148,8 @@ def upsert_live_quote(
     row = {
         "symbol":     symbol,
         "price":      round(float(last_price), 6),
-        "change_pct": round(float(change_pct), 4),
-        "volume":     int(volume),
+        "change_pct": round(float(change_pct or 0.0), 4),
+        "volume":     int(volume or 0),
         "regime":     regime,
         "updated_at": dt.datetime.utcnow().isoformat(),
     }
