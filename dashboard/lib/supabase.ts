@@ -25,17 +25,14 @@ export interface EquityPoint {
 }
 
 export interface Trade {
-  id:          string;
-  symbol:      string;
-  entry_ts:    string;
-  entry_price: number;
-  exit_ts:     string;
-  exit_price:  number;
-  qty:         number;
-  side:        string;
-  strategy:    string;
-  pnl:         number;
-  commission:  number;
+  id: string;
+  symbol: string;
+  ts: string;
+  price: number;
+  qty: number;
+  side: string;
+  strategy: string;
+  pnl: number;
 }
 
 export interface Position {
@@ -92,11 +89,11 @@ export async function fetchEquityCurve(limit = 500): Promise<EquityPoint[]> {
   return ((data ?? []) as EquityPoint[]).reverse();
 }
 
-export async function fetchTrades(limit = 200): Promise<Trade[]> {
+export async function fetchTrades(limit = 100): Promise<Trade[]> {
   const { data } = await supabase
     .from("crypto_trades")
     .select("*")
-    .order("exit_ts", { ascending: false })
+    .order("ts", { ascending: false })
     .limit(limit);
   return (data ?? []) as Trade[];
 }

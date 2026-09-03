@@ -130,11 +130,11 @@ export default function TradeLog() {
                 <tr className="text-slate-500 border-b border-white/5">
                   <th className="text-left pb-3 font-medium">Symbol</th>
                   <th className="text-left pb-3 font-medium">Strategy</th>
-                  <th className="text-right pb-3 font-medium">Entry</th>
-                  <th className="text-right pb-3 font-medium">Exit</th>
+                  <th className="text-right pb-3 font-medium">Side</th>
+                  <th className="text-right pb-3 font-medium">Price</th>
                   <th className="text-right pb-3 font-medium">Qty</th>
                   <th className="text-right pb-3 font-medium">P&L</th>
-                  <th className="text-left pb-3 font-medium pl-4">Closed</th>
+                  <th className="text-left pb-3 font-medium pl-4">Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,14 +148,16 @@ export default function TradeLog() {
                           {t.strategy}
                         </span>
                       </td>
-                      <td className="py-2.5 text-right text-slate-300 tabular-nums">${t.entry_price.toFixed(2)}</td>
-                      <td className="py-2.5 text-right text-slate-300 tabular-nums">${t.exit_price.toFixed(2)}</td>
+                      <td className={`py-2.5 text-right font-medium ${t.side === "BUY" || t.side === "LONG" ? "text-emerald-400" : "text-red-400"}`}>
+                        {t.side}
+                      </td>
+                      <td className="py-2.5 text-right text-slate-300 tabular-nums">${t.price.toFixed(2)}</td>
                       <td className="py-2.5 text-right text-slate-400 tabular-nums">{t.qty.toFixed(2)}</td>
                       <td className={`py-2.5 text-right tabular-nums font-semibold ${isUp ? "text-emerald-400" : "text-red-400"}`}>
                         {isUp ? "+" : ""}${t.pnl.toFixed(2)}
                       </td>
                       <td className="py-2.5 pl-4 text-slate-500 text-xs">
-                        {t.exit_ts ? new Date(t.exit_ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                        {t.ts ? new Date(t.ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
                       </td>
                     </tr>
                   );
