@@ -1,16 +1,20 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const links = [
   { href: "/",           label: "Dashboard" },
   { href: "/positions",  label: "Positions" },
   { href: "/trades",     label: "Trade Log" },
+  { href: "/reasoning",  label: "Bot Reasoning" },
   { href: "/model",      label: "AI Model" },
 ];
 
 export default function Nav() {
   const path = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <nav
       style={{
@@ -24,7 +28,7 @@ export default function Nav() {
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-2">
-          <span style={{ fontSize: "1.3rem" }}>₿</span>
+          <span style={{ fontSize: "1.3rem" }}>?</span>
           <span
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
@@ -38,6 +42,7 @@ export default function Nav() {
             CryptoPaper
           </span>
           <span
+            className="hidden sm:inline-block"
             style={{
               fontSize: "0.65rem",
               padding: "1px 6px",
@@ -50,11 +55,11 @@ export default function Nav() {
           >
             LIVE 24/7
           </span>
-          <span className="live-dot ml-1" />
+          <span className="live-dot ml-1 hidden sm:inline-block" />
         </div>
 
-        {/* Nav links */}
-        <div className="flex items-center gap-1">
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-1">
           {links.map(({ href, label }) => {
             const active = path === href;
             return (
@@ -78,7 +83,36 @@ export default function Nav() {
             );
           })}
         </div>
+
+        {/* Mobile Hamburger */}
+        <div className="md:hidden">
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-gray-300 hover:text-white p-2"
+          >
+            {menuOpen ? "?" : "?"}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      {menuOpen && (
+        <div className="md:hidden bg-[#04040f] border-b border-indigo-500/20 py-2 px-4 flex flex-col gap-2">
+          {links.map(({ href, label }) => {
+            const active = path === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className={\lock px-3 py-2 rounded-md text-sm font-medium \\}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </nav>
   );
 }

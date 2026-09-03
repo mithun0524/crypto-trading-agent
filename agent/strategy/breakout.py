@@ -33,7 +33,7 @@ def breakout_signal(bars: pd.DataFrame, direction: str = "up") -> dict:
         return {"strategy": "breakout", "action": "HOLD", "reason": "Donchian not ready"}
 
     # Confirmed pump: price at 2-day high + volume surge + RSI not overcooked
-    if dc_pos > 0.88 and vol_ratio > 1.8 and 45 < rsi < 78:
+    if dc_pos > 0.80 and vol_ratio > 1.2 and 35 < rsi < 85:
         squeeze_note = " (post-squeeze)" if bb_squeeze else ""
         return {
             "strategy": "breakout",
@@ -42,7 +42,7 @@ def breakout_signal(bars: pd.DataFrame, direction: str = "up") -> dict:
         }
 
     # Stop: price collapsed back below midpoint = failed breakout
-    if dc_pos < 0.35 or rsi > 83:
+    if dc_pos < 0.25 or rsi > 88:
         return {
             "strategy": "breakout",
             "action": "CLOSE",

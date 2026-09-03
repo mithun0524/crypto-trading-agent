@@ -12,10 +12,10 @@ Exit: RSI > 60 OR price back at BB midpoint
 from __future__ import annotations
 import pandas as pd
 
-RSI_BUY_NORMAL     = 35.0
-RSI_BUY_AGGRESSIVE = 42.0
+RSI_BUY_NORMAL     = 45.0
+RSI_BUY_AGGRESSIVE = 55.0
 RSI_SELL           = 62.0
-BB_BUY_ZONE        = 0.25
+BB_BUY_ZONE        = 0.45
 BB_SELL_ZONE       = 0.55
 
 
@@ -35,7 +35,7 @@ def mean_reversion_signal(bars: pd.DataFrame, aggressive: bool = False) -> dict:
     rsi_threshold = RSI_BUY_AGGRESSIVE if aggressive else RSI_BUY_NORMAL
 
     # Dip buy: oversold + near BB lower + low ADX (sideways) + volume dry
-    if rsi < rsi_threshold and bb_pos < BB_BUY_ZONE and adx < 30:
+    if rsi < rsi_threshold and bb_pos < BB_BUY_ZONE and adx < 50:
         return {
             "strategy": "mean_reversion",
             "action": "BUY",

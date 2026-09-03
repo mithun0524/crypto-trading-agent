@@ -112,7 +112,7 @@ export async function fetchLatestModelVersion(): Promise<ModelVersion | null> {
 // ── Realtime subscription helpers ────────────────────────────────────────────
 
 export function subscribeToLiveQuotes(
-  onUpdate: (quotes: LiveQuote[]) => void
+  onUpdate: any
 ) {
   // Initial fetch
   fetchLiveQuotes().then(onUpdate);

@@ -31,7 +31,7 @@ def momentum_signal(bars: pd.DataFrame, direction: str = "bull") -> dict:
         return {"strategy": "momentum", "action": "HOLD", "reason": "indicators not ready"}
 
     # Strong bull entry: all signals align
-    if (macd_hist > 0 and ema_cross > 0 and rsi < 72 and rsi > 30):
+    if (macd_hist > -0.5 and ema_cross > -0.5 and rsi < 80 and rsi > 20):
         confidence = "HIGH" if (adx_strong and vol_surge) else "MEDIUM"
         return {
             "strategy": "momentum",
@@ -40,7 +40,7 @@ def momentum_signal(bars: pd.DataFrame, direction: str = "bull") -> dict:
         }
 
     # Exit: momentum fading
-    if macd_hist < 0 or rsi > 80:
+    if macd_hist < -1.0 or rsi > 85:
         return {
             "strategy": "momentum",
             "action": "CLOSE",

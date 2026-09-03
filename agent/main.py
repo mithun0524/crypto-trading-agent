@@ -83,7 +83,7 @@ class TradingAgent:
     def _on_tick(self, symbol: str, close: float, volume: float):
         if SUPABASE_URL:
             regime = self.latest_regimes.get(symbol, "FLAT")
-            self.db_executor.submit(upsert_live_quote, symbol, close, 0.0, int(volume), regime)
+            self.db_executor.submit(upsert_live_quote, symbol, close, None, int(volume) if volume else None, regime)
 
     def _on_bar(self, symbol: str, bar: dict):
         """Called on every incoming bar for every subscribed symbol."""
