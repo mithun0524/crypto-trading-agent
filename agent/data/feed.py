@@ -168,18 +168,18 @@ class LiveFeed:
 
     def warmup_from_history(self):
         """
-        Seed the buffer with recent historical 1-minute bars via yfinance.
-        We load 5 days of 1-min data (~7,200 bars), which gives ~120 hourly bars
-        after resampling in main.py -- well above the 26-bar minimum for all indicators.
+        Seed the buffer with recent historical 1-hour bars via yfinance.
+        We load 15 days of 1-hour data (~360 bars). 
+        We need at least 200 bars for the 200-SMA in features.
         """
-        logger.info(f"Warming up bar buffers (1-min history, last 5d) ...")
+        logger.info(f"Warming up bar buffers (1-hour history, last 15d) ...")
         for sym in SYMBOLS:
             yf_sym = YFINANCE_SYMBOLS.get(sym, sym)
             try:
                 raw = yf.download(
                     yf_sym,
-                    period="5d",
-                    interval="1m",
+                    period="15d",
+                    interval="1h",
                     auto_adjust=True,
                     progress=False,
                     threads=False,
@@ -208,6 +208,7 @@ class LiveFeed:
                 logger.info(f"  {sym}: {len(raw)} warmup bars loaded")
             except Exception as exc:
                 logger.error(f"  {sym}: warmup failed: {exc}")
+
 
 
 
