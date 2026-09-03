@@ -58,10 +58,10 @@ export interface TradingSignal {
   symbol: string;
   regime: string;
   strategy: string;
-  action: string;
+  raw_signal: string;
   reason: string;
   model_version: string;
-  created_at: string;
+  ts: string;
 }
 
 // ── Fetchers ───────────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ export async function fetchSignals(limit = 100): Promise<TradingSignal[]> {
   const { data } = await supabase
     .from("signals")
     .select("*")
-    .order("created_at", { ascending: false })
+    .order("ts", { ascending: false })
     .limit(limit);
   return (data ?? []) as TradingSignal[];
 }
