@@ -11,7 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnon);
 export interface LiveQuote {
   symbol:     string;
   ts:         string;
-  last_price: number;
+  price:      number;
   change_pct: number;
   volume:     number;
   regime:     "TREND_UP" | "TREND_DOWN" | "RANGE" | "BREAKOUT" | "FLAT";

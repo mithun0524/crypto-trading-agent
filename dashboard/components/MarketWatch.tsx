@@ -37,17 +37,17 @@ function SparkLine({ data }: { data: number[] }) {
 function QuoteTile({ quote, history }: { quote: LiveQuote; history: number[] }) {
   const isUp       = quote.change_pct >= 0;
   const regime     = REGIME_CONFIG[quote.regime] ?? REGIME_CONFIG.FLAT;
-  const prevPrice  = useRef(quote.last_price);
+  const prevPrice  = useRef(quote.price);
   const [flash, setFlash] = useState<"up" | "down" | null>(null);
 
   useEffect(() => {
-    if (quote.last_price !== prevPrice.current) {
-      setFlash(quote.last_price > prevPrice.current ? "up" : "down");
-      prevPrice.current = quote.last_price;
+    if (quote.price !== prevPrice.current) {
+      setFlash(quote.price > prevPrice.current ? "up" : "down");
+      prevPrice.current = quote.price;
       const t = setTimeout(() => setFlash(null), 600);
       return () => clearTimeout(t);
     }
-  }, [quote.last_price]);
+  }, [quote.price]);
 
   return (
     <div className={`
@@ -67,7 +67,7 @@ function QuoteTile({ quote, history }: { quote: LiveQuote; history: number[] }) 
       {/* Price */}
       <div className={`text-base font-mono font-semibold tabular-nums transition-colors duration-300
         ${flash === "up" ? "text-emerald-400" : flash === "down" ? "text-red-400" : "text-slate-100"}`}>
-        ${quote.last_price.toFixed(2)}
+        ${quote.price.toFixed(2)}
       </div>
 
       {/* Change % + sparkline */}
@@ -91,7 +91,7 @@ export default function MarketWatch() {
       setHistory((prev) => {
         const next = { ...prev };
         q.forEach((quote: LiveQuote) => {
-          const arr = [...(next[quote.symbol] ?? []), quote.last_price].slice(-20);
+          const arr = [...(next[quote.symbol] ?? []), quote.price].slice(-20);
           next[quote.symbol] = arr;
         });
         return next;

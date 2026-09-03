@@ -34,7 +34,7 @@ function RegimeBadge({ quote }: { quote: LiveQuote }) {
       </div>
       <div className="text-right">
         <p className="text-sm font-mono font-medium text-slate-100">
-          ${quote.last_price.toFixed(2)}
+          ${quote.price.toFixed(2)}
         </p>
         <p className={`text-[11px] font-mono font-medium mt-1 ${isUp ? "text-emerald-500" : "text-red-500"}`}>
           {isUp ? "+" : ""}{quote.change_pct.toFixed(2)}%

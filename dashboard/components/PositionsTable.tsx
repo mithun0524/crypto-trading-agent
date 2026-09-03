@@ -56,7 +56,7 @@ export default function PositionsTable({ positions }: PositionsTableProps) {
           <tbody>
             {positions.map((pos) => {
               const quote    = quotes[pos.symbol];
-              const current  = quote?.last_price ?? pos.entry_price;
+              const current  = quote?.price ?? pos.entry_price;
               const pnl      = (current - pos.entry_price) * pos.qty;
               const pnlPct   = ((current - pos.entry_price) / pos.entry_price) * 100;
               const isUp     = pnl >= 0;
