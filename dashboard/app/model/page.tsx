@@ -1,6 +1,8 @@
 // app/model/page.tsx — Model version info page
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+
 export const metadata  = { title: "Model · AlgoPaper" };
 export const revalidate = 300; // revalidate every 5 min
 

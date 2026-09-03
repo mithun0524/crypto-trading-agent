@@ -2,6 +2,8 @@
 import PositionsTable from "@/components/PositionsTable";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Positions · AlgoPaper" };
 export const revalidate = 30; // ISR: revalidate every 30s
 

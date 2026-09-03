@@ -2,6 +2,8 @@
 import EquityCurve from "@/components/EquityCurve";
 import RegimeGrid from "@/components/RegimeGrid";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <div className="space-y-6">
