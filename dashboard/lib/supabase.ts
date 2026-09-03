@@ -68,7 +68,7 @@ export interface TradingSignal {
 
 export async function fetchSignals(limit = 100): Promise<TradingSignal[]> {
   const { data } = await supabase
-    .from("signals")
+    .from("crypto_signals")
     .select("*")
     .order("ts", { ascending: false })
     .limit(limit);
@@ -77,7 +77,7 @@ export async function fetchSignals(limit = 100): Promise<TradingSignal[]> {
 
 export async function fetchLiveQuotes(): Promise<LiveQuote[]> {
   const { data } = await supabase
-    .from("live_quotes")
+    .from("crypto_live_quotes")
     .select("*")
     .order("symbol");
   return (data ?? []) as LiveQuote[];
@@ -85,7 +85,7 @@ export async function fetchLiveQuotes(): Promise<LiveQuote[]> {
 
 export async function fetchEquityCurve(limit = 500): Promise<EquityPoint[]> {
   const { data } = await supabase
-    .from("equity_curve")
+    .from("crypto_equity_curve")
     .select("*")
     .order("ts", { ascending: false })
     .limit(limit);
@@ -94,7 +94,7 @@ export async function fetchEquityCurve(limit = 500): Promise<EquityPoint[]> {
 
 export async function fetchTrades(limit = 200): Promise<Trade[]> {
   const { data } = await supabase
-    .from("trades")
+    .from("crypto_trades")
     .select("*")
     .order("exit_ts", { ascending: false })
     .limit(limit);
@@ -128,7 +128,7 @@ export function subscribeToLiveQuotes(
     .channel(`live_quotes_changes_${Math.random()}`)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "live_quotes" },
+      { event: "*", schema: "public", table: "crypto_live_quotes" },
       (payload) => {
         if (payload.new && Object.keys(payload.new).length > 0) {
           const newQuote = payload.new as LiveQuote;
@@ -159,7 +159,7 @@ export function subscribeToEquity(
     .channel(`equity_changes_${Math.random()}`)
     .on(
       "postgres_changes",
-      { event: "INSERT", schema: "public", table: "equity_curve" },
+      { event: "INSERT", schema: "public", table: "crypto_equity_curve" },
       (payload) => onUpdate(payload.new as EquityPoint)
     )
     .subscribe();
