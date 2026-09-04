@@ -168,8 +168,63 @@ export default function TradeLog() {
             <select
               value={symFilter}
               onChange={(e) => setSymFilter(e.target.value)}
+              className="bg-slate-950 border border-white/10 rounded-lg text-sm text-slate-300 px-3 py-1.5 outline-none focus:border-indigo-500/50 transition-colors"
+            >
+              <option value="all">All Assets</option>
+              {symbols.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
-        )}
+          {loading && <RefreshCw className="w-4 h-4 text-slate-500 animate-spin ml-auto" />}
+        </div>
+
+        {/* Detailed Trades Table */}
+        <div className="overflow-x-auto rounded-xl border border-white/5 bg-slate-950/20">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-slate-900/80 border-b border-white/5 text-slate-400">
+              <tr>
+                <th className="px-4 py-3 font-medium">Time</th>
+                <th className="px-4 py-3 font-medium">Symbol</th>
+                <th className="px-4 py-3 font-medium">Strategy</th>
+                <th className="px-4 py-3 font-medium text-right">Price</th>
+                <th className="px-4 py-3 font-medium text-right">Qty</th>
+                <th className="px-4 py-3 font-medium text-right">P&L</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-slate-300">
+              {filtered.map((t) => (
+                <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-4 py-2.5 text-slate-500">
+                    {new Date(t.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                  </td>
+                  <td className="px-4 py-2.5 font-medium text-white">{t.symbol}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="bg-slate-800/50 text-slate-300 px-2 py-0.5 rounded-md text-xs border border-white/5">
+                      {t.strategy}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-medium">${t.price.toFixed(2)}</td>
+                  <td className="px-4 py-2.5 text-right text-slate-400">
+                    <span className={t.side === "BUY" || t.side === "LONG" ? "text-emerald-400/80" : "text-rose-400/80"}>{t.side}</span> {t.qty.toFixed(4)}
+                  </td>
+                  <td className={`px-4 py-2.5 text-right font-medium ${
+                    t.pnl > 0 ? "text-emerald-400" : t.pnl < 0 ? "text-rose-400" : "text-slate-500"
+                  }`}>
+                    {t.pnl > 0 ? "+" : ""}{t.pnl === 0 ? "-" : `$${t.pnl.toFixed(2)}`}
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                    No trades match the selected filters
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
