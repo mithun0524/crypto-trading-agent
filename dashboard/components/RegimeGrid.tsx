@@ -77,15 +77,17 @@ export default function RegimeGrid() {
             <div className="w-10 h-10 rounded-full border border-slate-700/50 flex items-center justify-center bg-slate-800/30">
               <Info className="w-5 h-5 text-slate-400" />
             </div>
-            <span className="w-2 h-2 rounded-full bg-slate-600 animate-pulse" />
-            <p className="text-slate-500 text-sm font-medium">Waiting for data stream...</p>
+            <p className="text-sm font-medium text-slate-400">Waiting for Market Data</p>
+            <p className="text-xs max-w-[200px]">Live quotes and regime classifications will appear here once connected.</p>
           </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-1 gap-3">
-          {quotes.map((q) => <RegimeBadge key={q.symbol} quote={q} />)}
-        </div>
-      )}
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+            {quotes.map((q) => (
+              <RegimeCard key={q.symbol} quote={q} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
