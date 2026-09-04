@@ -142,9 +142,11 @@ export default function MarketWatch() {
 
   return (
     <div className="w-full overflow-x-auto custom-scrollbar border-b border-white/5 bg-slate-950/50 backdrop-blur">
-      <div className="flex gap-4 px-6 py-3 min-w-max">
+      <div className="flex gap-4 px-6 py-3 min-w-full w-max">
         {quotes.map((q) => (
-          <QuoteTile key={q.symbol} quote={q} history={history[q.symbol] ?? []} />
+          <div key={q.symbol} className="flex-1 min-w-[200px]">
+            <QuoteTile quote={q} history={history[q.symbol] ?? []} />
+          </div>
         ))}
       </div>
     </div>
