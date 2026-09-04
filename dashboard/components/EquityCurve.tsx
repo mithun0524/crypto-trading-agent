@@ -64,88 +64,101 @@ export default function EquityCurve() {
 
   useEffect(() => {
     fetchEquityCurve(500).then(processPoints);
-    const unsub = subscribeToEquity((point) => {
+    const unsub = subscribeToEquity((p) => {
       setData((prev) => {
-        const next = [
-          ...prev,
-          {
-            ts:     new Date(point.ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-            equity: point.total,
-            label:  point.ts,
-          },
-        ].slice(-500);
-        const latest = next[next.length - 1]?.equity ?? STARTING_EQUITY;
-        setStats({ pnl: latest - STARTING_EQUITY, pnlPct: ((latest - STARTING_EQUITY) / STARTING_EQUITY) * 100, latest });
-        return next;
+        const newData = [...prev, {
+          ts:     new Date(p.ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+          equity: p.total,
+          label:  p.ts,
+        }];
+        if (newData.length > 500) newData.shift();
+        
+        const latest = p.total;
+        setStats({
+          pnl:    latest - STARTING_EQUITY,
+          pnlPct: ((latest - STARTING_EQUITY) / STARTING_EQUITY) * 100,
+          latest,
+        });
+        
+        return newData;
       });
     });
     return unsub;
   }, []);
 
   const isUp = stats.pnl >= 0;
-  const color = isUp ? "#10b981" : "#ef4444"; // emerald-500 or red-500
 
   return (
-    <div className="flex-1 rounded-xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6 relative flex flex-col shadow-sm">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-0 mb-6 sm:mb-8 relative z-10">
+    <div className="flex-1 rounded-2xl border border-white/5 bg-slate-900/60 backdrop-blur p-6 flex flex-col relative overflow-hidden">
+      {/* Decorative background glow */}
+      <div className={`absolute top-0 right-0 w-64 h-64 blur-3xl opacity-20 pointer-events-none rounded-full translate-x-1/2 -translate-y-1/2 ${isUp ? "bg-emerald-500" : "bg-rose-500"}`} />
+      
+      <div className="flex items-start justify-between mb-8 z-10">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-slate-100">
-              Portfolio Equity
-            </h2>
-            <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-medium uppercase tracking-wider">
-              Paper
-            </span>
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Total Equity
+          </h2>
+          <div className="flex items-baseline gap-3 mt-2">
+            <p className="text-4xl font-bold tracking-tight text-white tabular-nums">
+              {formatCurrency(stats.latest)}
+            </p>
+            <div className={`flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-md ${isUp ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
+              {isUp ? "+" : ""}{formatCurrency(stats.pnl)} ({formatPct(stats.latest)})
+            </div>
           </div>
-          <p className="text-slate-500 text-xs mt-1">Live tracking against $100K starting capital</p>
         </div>
-        <div className="text-left sm:text-right">
-          <p className="text-3xl sm:text-4xl font-semibold text-white font-mono tracking-tight">
-            {formatCurrency(stats.latest)}
-          </p>
-          <div className={`flex items-center sm:justify-end gap-1.5 mt-1 text-sm font-mono font-medium`} style={{ color }}>
-            <TrendingUp className={`w-4 h-4 ${!isUp && "rotate-180"}`} />
-            <span>{isUp ? "+" : ""}{formatCurrency(stats.pnl)}</span>
-            <span className="opacity-75">({isUp ? "+" : ""}{stats.pnlPct.toFixed(2)}%)</span>
-          </div>
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-950/50 px-3 py-1.5 rounded-full border border-white/5">
+          <Moon className="w-3.5 h-3.5" />
+          Realtime
         </div>
       </div>
 
-      {/* Chart */}
-      {data.length === 0 ? (
-        <div className="flex-1 min-h-[300px] flex items-center justify-center relative z-10 border border-slate-800 border-dashed rounded-lg bg-slate-900/30">
-          <div className="flex flex-col items-center gap-3 text-slate-500">
-            <Moon className="w-8 h-8" />
-            <p className="font-medium text-sm">Market is Closed</p>
-            <p className="text-xs text-center max-w-[200px]">Agent streams data and executes trades during market hours.</p>
+      <div className="flex-1 min-h-[300px] z-10">
+        {data.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-slate-600 text-sm">
+            Waiting for data points...
           </div>
-        </div>
-      ) : (
-        <div className="relative z-10 flex-1 min-h-[300px]">
+        ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"  stopColor={color} stopOpacity={0.2} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0}    />
+                <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={isUp ? "#10b981" : "#f43f5e"} stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor={isUp ? "#10b981" : "#f43f5e"} stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="ts" tick={{ fill: "#64748b", fontSize: 11 }}
-                tickLine={false} axisLine={false} interval="preserveStartEnd" tickMargin={12} />
-              <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`}
-                tick={{ fill: "#64748b", fontSize: 11, fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false} tickMargin={12} />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#334155', strokeWidth: 1, strokeDasharray: '4 4' }} />
-              <Area
-                type="monotone" dataKey="equity" name="Portfolio"
-                stroke={color} strokeWidth={2.5}
-                fill="url(#equityGrad)" dot={false} activeDot={{ r: 5, fill: color, stroke: "#0f172a", strokeWidth: 2 }}
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff0a" vertical={false} />
+              <XAxis 
+                dataKey="ts" 
+                stroke="#ffffff40" 
+                fontSize={11} 
+                tickMargin={12} 
+                minTickGap={40}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis 
+                stroke="#ffffff40" 
+                fontSize={11} 
+                tickFormatter={(val) => `$${(val/1000).toFixed(0)}k`} 
+                domain={['auto', 'auto']}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#ffffff20', strokeWidth: 1, strokeDasharray: '4 4' }} />
+              <Area 
+                type="monotone" 
+                dataKey="equity" 
+                stroke={isUp ? "#10b981" : "#f43f5e"} 
+                strokeWidth={3} 
+                fill="url(#colorEquity)" 
+                isAnimationActive={false}
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

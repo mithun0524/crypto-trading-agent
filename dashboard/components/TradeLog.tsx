@@ -18,6 +18,9 @@ export default function TradeLog() {
     return unsub;
   }, []);
 
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
+
   const strategies = [...new Set(trades.map((t) => t.strategy))].filter(Boolean);
   const symbols = [...new Set(trades.map((t) => t.symbol))].sort();
 
@@ -29,15 +32,21 @@ export default function TradeLog() {
     });
   }, [trades, filter, symFilter]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [filter, symFilter]);
+
   const totalPnl = filtered.reduce((s, t) => s + t.pnl, 0);
   const wins = filtered.filter(t => t.pnl > 0).length;
   const winRate = filtered.length > 0 ? (wins / filtered.length) * 100 : 0;
+  
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedTrades = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Chart Data Preparation
   const chartData = useMemo(() => {
     let cumulative = 0;
-    // Trades come in descending order (newest first). 
-    // To show cumulative chart correctly over time, we reverse them.
     return [...filtered].reverse().map((t, index) => {
       cumulative += t.pnl;
       return {
@@ -149,40 +158,63 @@ export default function TradeLog() {
 
       <div className="border-t border-white/5 pt-6">
         {/* Filters */}
-        <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Strategy:</span>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="bg-slate-950 border border-white/10 rounded-lg text-sm text-slate-300 px-3 py-1.5 outline-none focus:border-indigo-500/50 transition-colors"
-            >
-              <option value="all">All Strategies</option>
-              {strategies.map((s) => (
-                <option key={s} value={s}>{s.replace("_", " ")}</option>
-              ))}
-            </select>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Strategy:</span>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="bg-slate-950 border border-white/10 rounded-lg text-sm text-slate-300 px-3 py-1.5 outline-none focus:border-indigo-500/50 transition-colors"
+              >
+                <option value="all">All Strategies</option>
+                {strategies.map((s) => (
+                  <option key={s} value={s}>{s.replace("_", " ")}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Symbol:</span>
+              <select
+                value={symFilter}
+                onChange={(e) => setSymFilter(e.target.value)}
+                className="bg-slate-950 border border-white/10 rounded-lg text-sm text-slate-300 px-3 py-1.5 outline-none focus:border-indigo-500/50 transition-colors"
+              >
+                <option value="all">All Assets</option>
+                {symbols.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            {loading && <RefreshCw className="w-4 h-4 text-slate-500 animate-spin" />}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Symbol:</span>
-            <select
-              value={symFilter}
-              onChange={(e) => setSymFilter(e.target.value)}
-              className="bg-slate-950 border border-white/10 rounded-lg text-sm text-slate-300 px-3 py-1.5 outline-none focus:border-indigo-500/50 transition-colors"
-            >
-              <option value="all">All Assets</option>
-              {symbols.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-          {loading && <RefreshCw className="w-4 h-4 text-slate-500 animate-spin ml-auto" />}
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-950 border border-white/10 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Prev
+              </button>
+              <span className="text-xs text-slate-500 font-medium">Page {page} of {totalPages}</span>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-950 border border-white/10 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Detailed Trades Table */}
-        <div className="overflow-x-auto rounded-xl border border-white/5 bg-slate-950/20">
+        <div className="overflow-x-auto rounded-xl border border-white/5 bg-slate-950/20 max-h-[400px] overflow-y-auto relative">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-900/80 border-b border-white/5 text-slate-400">
+            <thead className="bg-slate-900/95 backdrop-blur border-b border-white/5 text-slate-400 sticky top-0 z-10">
               <tr>
                 <th className="px-4 py-3 font-medium">Time</th>
                 <th className="px-4 py-3 font-medium">Symbol</th>
@@ -193,7 +225,7 @@ export default function TradeLog() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-slate-300">
-              {filtered.map((t) => (
+              {paginatedTrades.map((t) => (
                 <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-4 py-2.5 text-slate-500">
                     {new Date(t.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
@@ -215,7 +247,7 @@ export default function TradeLog() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {paginatedTrades.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                     No trades match the selected filters
