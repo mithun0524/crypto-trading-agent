@@ -1,4 +1,4 @@
-﻿"""
+"""
 features/engineer.py -- CryptoPaper feature engineering.
 
 Research-backed crypto feature stack (2025 best practices):
@@ -149,6 +149,7 @@ def compute_features(df: pd.DataFrame, fng_series: dict | None = None) -> pd.Dat
     typical = (h + l + c) / 3
     df["vwap_24h"] = (typical * v).rolling(24).sum() / (v.rolling(24).sum() + 1)
     df["vwap_dist"] = (c - df["vwap_24h"]) / c
+    df["vwap_zscore"] = (c - df["vwap_24h"]) / (c.rolling(24).std() + 1e-9)
 
     # -- SMA distances (trend context) ----------------------------------------
     for period in [20, 50, 200]:
@@ -213,7 +214,7 @@ def feature_columns() -> list[str]:
         # Donchian
         "dc_pos","near_dc_high","near_dc_low",
         # Volume
-        "vol_ratio","vol_surge","vol_ret","vwap_dist",
+        "vol_ratio","vol_surge","vol_ret","vwap_dist","vwap_zscore",
         # SMA
         "dist_sma20","dist_sma50","dist_sma200",
         # Sentiment (Fear & Greed)

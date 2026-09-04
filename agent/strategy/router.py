@@ -1,4 +1,4 @@
-﻿"""
+"""
 strategy/router.py -- Crypto regime -> strategy dispatcher.
 
 Crypto regimes (NO US equity regimes):
@@ -17,8 +17,8 @@ from loguru import logger
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from strategy.momentum import momentum_signal
-from strategy.mean_reversion import mean_reversion_signal
 from strategy.breakout import breakout_signal
+from strategy.vwap_scalper import vwap_scalper_signal
 
 
 def route(regime: str, symbol: str, bars: pd.DataFrame, open_position: bool = False) -> dict:
@@ -35,23 +35,13 @@ def route(regime: str, symbol: str, bars: pd.DataFrame, open_position: bool = Fa
         return {**base, "strategy": "momentum", "action": "HOLD",
                 "reason": "BEAR_TREND -- staying in cash"}
 
-    elif regime == "ACCUMULATION":
-        # Accumulation = range-bound consolidation, buy dips aggressively
-        sig = mean_reversion_signal(bars, aggressive=True)
+    elif regime == "RANGE":
+        sig = vwap_scalper_signal(bars, open_position=open_position)
         return {**base, **sig}
 
-    elif regime == "PUMP":
-        # Explosive upside breakout with volume -- ride it with tight stop
+    elif regime == "BREAKOUT":
         sig = breakout_signal(bars, direction="up")
         return {**base, **sig}
-
-    elif regime == "DUMP":
-        # Flash crash / liquidation cascade -- exit everything immediately
-        if open_position:
-            return {**base, "strategy": "risk", "action": "CLOSE",
-                    "reason": "DUMP detected -- emergency exit"}
-        return {**base, "strategy": "risk", "action": "HOLD",
-                "reason": "DUMP -- no position, staying in cash"}
 
     else:  # FLAT
         return {**base, "strategy": "flat", "action": "HOLD",

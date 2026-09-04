@@ -1,4 +1,4 @@
-﻿"""
+"""
 db/supabase_client.py -- CryptoPaper Supabase DB client.
 
 All tables are prefixed with crypto_ to share the same Supabase project
@@ -27,6 +27,13 @@ def with_retry(max_retries=3, delay=1.0, backoff=2.0):
                         logger.error(f"Supabase {func.__name__} failed after {max_retries} attempts: {e}")
                         raise
                     logger.warning(f"Supabase {func.__name__} attempt {attempt} failed ({e}). Retrying in {current_delay}s...")
+                    
+                    # Force recreate client on next retry by clearing the singleton
+                    import sys
+                    mod = sys.modules[__name__]
+                    if hasattr(mod, '_client'):
+                        mod._client = None
+                        
                     time.sleep(current_delay)
                     current_delay *= backoff
         return wrapper

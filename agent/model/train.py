@@ -1,4 +1,4 @@
-﻿"""
+"""
 model/train.py -- CryptoPaper XGBoost regime classifier.
 """
 from __future__ import annotations
@@ -20,17 +20,72 @@ from data.sentiment import build_fng_series
 from features.engineer import compute_features, feature_columns
 
 
-def label_regime(bars: pd.DataFrame) -> pd.Series:
-    fwd  = bars["close"].pct_change(LABEL_HORIZON).shift(-LABEL_HORIZON)
-    logr = np.log(bars["close"] / bars["close"].shift(1))
-    vol  = logr.rolling(24).std() * np.sqrt(365 * 24)
+def label_regime(df: pd.DataFrame) -> pd.Series:
+    """
+    Generate forward-looking regime labels from historical OHLCV bars.
+    Uses FUTURE data — for training only. Never used at inference.
+    """
+    n  = LABEL_HORIZON
+    close = df["close"]
+    fwd_ret = close.shift(-n) / close - 1            # n-bar forward return
+    log_ret = np.log(close / close.shift(1))
+    realvol = log_ret.rolling(20).std() * np.sqrt(365 * 24)
 
-    labels = pd.Series("FLAT", index=bars.index)
-    labels[fwd >  TREND_RETURN_PCT * 2.5]                                      = "PUMP"
-    labels[fwd < -TREND_RETURN_PCT * 2.5]                                      = "DUMP"
-    labels[(fwd >  TREND_RETURN_PCT) & (labels == "FLAT")]                     = "BULL_TREND"
-    labels[(fwd < -TREND_RETURN_PCT) & (labels == "FLAT")]                     = "BEAR_TREND"
-    labels[(vol < VOL_THRESHOLD) & (labels == "FLAT") & (fwd.abs() < TREND_RETURN_PCT * 0.4)] = "ACCUMULATION"
+    # Bollinger channel for RANGE detection
+    bb_mid   = close.rolling(20).mean()
+    bb_std   = close.rolling(20).std()
+    bb_upper = bb_mid + 2 * bb_std
+    bb_lower = bb_mid - 2 * bb_std
+
+    # Rolling Bollinger bandwidth for BREAKOUT detection (squeeze → expansion)
+    bb_width    = (bb_upper - bb_lower) / bb_mid
+    width_pct   = bb_width.rank(pct=True)
+    width_low   = (width_pct < 0.2)           # squeeze
+    width_spike = bb_width > bb_width.shift(n) * 1.5  # sharp expansion
+
+    labels = pd.Series("FLAT", index=df.index, name="regime")
+
+    # ── TRIPLE-BARRIER METHOD ────────────────────────────────────────────────
+    if "atr" in df.columns:
+        profit_target = 1.5 * df["atr"]
+        stop_loss     = 1.5 * df["atr"]
+    else:
+        profit_target = close * TREND_RETURN_PCT
+        stop_loss     = close * TREND_RETURN_PCT
+
+    close_arr = close.values
+    pt_arr = profit_target.values
+    sl_arr = stop_loss.values
+    trend_labels = np.full(len(close_arr), "FLAT", dtype=object)
+    
+    for i in range(len(close_arr) - n):
+        c = close_arr[i]
+        t_up = c + pt_arr[i]
+        t_dn = c - sl_arr[i]
+        
+        for lag in range(1, n + 1):
+            future_c = close_arr[i + lag]
+            if future_c >= t_up:
+                trend_labels[i] = "BULL_TREND"
+                break
+            elif future_c <= t_dn:
+                trend_labels[i] = "BEAR_TREND"
+                break
+
+    labels = pd.Series(trend_labels, index=df.index, name="regime")
+
+    # BREAKOUT: squeeze followed by expansion (overrides FLAT, not TREND)
+    mask_break = width_low.shift(n) & width_spike
+    labels[mask_break & (labels == "FLAT")] = "BREAKOUT"
+
+    # RANGE: price stayed inside Bollinger channel for the next n bars
+    stayed_in = True
+    for lag in range(1, n + 1):
+        stayed_in = stayed_in & (
+            (close.shift(-lag) <= bb_upper) & (close.shift(-lag) >= bb_lower)
+        )
+    labels[stayed_in & (labels == "FLAT")] = "RANGE"
+
     return labels
 
 
