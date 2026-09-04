@@ -12,13 +12,49 @@ async function getOpenPositions() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
-  // Open positions are derived from trades that have entry_ts but no exit_ts
+  
   const { data } = await supabase
-    .from("trades")
-    .select("symbol, entry_ts, entry_price, qty, strategy")
-    .is("exit_ts", null)
-    .order("entry_ts", { ascending: false });
-  return data ?? [];
+    .from("crypto_trades")
+    .select("*")
+    .order("ts", { ascending: true });
+    
+  if (!data) return [];
+  
+  // Compute open positions by aggregating trades
+  const positionsMap: Record<string, any> = {};
+  
+  for (const trade of data) {
+    const sym = trade.symbol;
+    if (!positionsMap[sym]) {
+      positionsMap[sym] = { symbol: sym, qty: 0, entry_price: 0, strategy: trade.strategy, entry_ts: trade.ts };
+    }
+    
+    const isBuy = trade.side === "BUY" || trade.side === "LONG";
+    const tradeQty = isBuy ? trade.qty : -trade.qty;
+    const currentQty = positionsMap[sym].qty;
+    
+    // Simple average price logic for simplicity
+    if (Math.sign(currentQty + tradeQty) !== Math.sign(currentQty) && currentQty !== 0) {
+      // Position flipped or closed
+      positionsMap[sym].entry_price = trade.price;
+      positionsMap[sym].entry_ts = trade.ts;
+    } else if (currentQty === 0) {
+      // New position
+      positionsMap[sym].entry_price = trade.price;
+      positionsMap[sym].entry_ts = trade.ts;
+    } else {
+      // Averaging down/up (approximate)
+      positionsMap[sym].entry_price = (positionsMap[sym].entry_price * Math.abs(currentQty) + trade.price * Math.abs(tradeQty)) / (Math.abs(currentQty) + Math.abs(tradeQty));
+    }
+    
+    positionsMap[sym].qty += tradeQty;
+    positionsMap[sym].strategy = trade.strategy;
+  }
+  
+  // Filter out closed positions (qty == 0, with small float tolerance)
+  return Object.values(positionsMap)
+    .filter(p => Math.abs(p.qty) > 0.0001)
+    .sort((a, b) => new Date(b.entry_ts).getTime() - new Date(a.entry_ts).getTime());
 }
 
 export default async function PositionsPage() {
@@ -29,7 +65,7 @@ export default async function PositionsPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Open Positions</h1>
         <p className="text-slate-400 text-sm mt-1">
-          Live unrealized P&L, updated every bar from Supabase Realtime
+          Live unrealized P&L, derived from trades and updated via Realtime
         </p>
       </div>
       <PositionsTable positions={positions as any} />

@@ -163,3 +163,23 @@ export function subscribeToEquity(
 
   return () => { supabase.removeChannel(channel); };
 }
+
+export function subscribeToTrades(
+  onUpdate: (trades: Trade[]) => void
+) {
+  fetchTrades(200).then(onUpdate);
+
+  const channel = supabase
+    .channel(`crypto_trades_changes_${Math.random()}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "crypto_trades" },
+      () => {
+        // Just refetch the top 200 trades when a new one is inserted
+        fetchTrades(200).then(onUpdate);
+      }
+    )
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
+}

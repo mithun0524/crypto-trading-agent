@@ -1,8 +1,8 @@
 "use client";
-// components/PositionsTable.tsx — Open positions with live unrealized P&L
-
 import { useEffect, useState } from "react";
-import { subscribeToLiveQuotes, fetchTrades, LiveQuote } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import { subscribeToLiveQuotes, subscribeToTrades, LiveQuote } from "@/lib/supabase";
+import { Activity } from "lucide-react";
 
 interface OpenPosition {
   symbol:      string;
@@ -18,15 +18,25 @@ interface PositionsTableProps {
 
 export default function PositionsTable({ positions }: PositionsTableProps) {
   const [quotes, setQuotes] = useState<Record<string, LiveQuote>>({});
+  const router = useRouter();
 
   useEffect(() => {
-    const unsub = subscribeToLiveQuotes((q: LiveQuote[]) => {
+    const unsubQuotes = subscribeToLiveQuotes((q: LiveQuote[]) => {
       const map: Record<string, LiveQuote> = {};
       q.forEach((quote: LiveQuote) => (map[quote.symbol] = quote));
       setQuotes(map);
     });
-    return unsub;
-  }, []);
+
+    const unsubTrades = subscribeToTrades(() => {
+      // Refresh the page data when a new trade occurs
+      router.refresh();
+    });
+
+    return () => {
+      unsubQuotes();
+      unsubTrades();
+    };
+  }, [router]);
 
   if (positions.length === 0) {
     return (
