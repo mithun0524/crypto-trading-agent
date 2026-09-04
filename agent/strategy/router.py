@@ -1,48 +1,29 @@
 """
-strategy/router.py -- Crypto regime -> strategy dispatcher.
+strategy/router.py -- Crypto regime -> Pure ML trading dispatcher.
 
-Crypto regimes (NO US equity regimes):
-  BULL_TREND   -> momentum long entry
-  BEAR_TREND   -> close positions / cash
-  ACCUMULATION -> mean-reversion buy the dip
-  PUMP         -> breakout long entry with tight stop
-  DUMP         -> emergency close all
-  FLAT         -> hold cash
+Crypto regimes (predicted directly by XGBoost):
+  BULL_TREND   -> BUY (Model learned profit target is likely)
+  BEAR_TREND   -> CLOSE (Model learned stop loss is likely)
+  BREAKOUT     -> BUY (Model learned squeeze expansion)
+  DUMP         -> CLOSE (Model learned crash)
+  RANGE / FLAT -> HOLD
 """
 from __future__ import annotations
-from pathlib import Path
 import pandas as pd
 from loguru import logger
 
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from strategy.momentum import momentum_signal
-from strategy.breakout import breakout_signal
-from strategy.vwap_scalper import vwap_scalper_signal
-
-
 def route(regime: str, symbol: str, bars: pd.DataFrame, open_position: bool = False) -> dict:
-    base = {"symbol": symbol, "regime": regime, "action": "HOLD", "strategy": "none", "reason": ""}
+    base = {"symbol": symbol, "regime": regime, "action": "HOLD", "strategy": "pure_ml", "reason": ""}
 
-    if regime == "BULL_TREND":
-        sig = momentum_signal(bars, direction="bull")
-        return {**base, **sig}
+    if regime in ("BULL_TREND", "BREAKOUT", "PUMP"):
+        return {**base, "action": "BUY", "reason": f"AI predicted {regime} - Executing BUY"}
 
-    elif regime == "BEAR_TREND":
+    elif regime in ("BEAR_TREND", "DUMP"):
         if open_position:
-            return {**base, "strategy": "momentum", "action": "CLOSE",
-                    "reason": "BEAR_TREND -- closing long to protect capital"}
-        return {**base, "strategy": "momentum", "action": "HOLD",
-                "reason": "BEAR_TREND -- staying in cash"}
+            return {**base, "action": "CLOSE", "reason": f"AI predicted {regime} - Closing position"}
+        return {**base, "action": "HOLD", "reason": f"AI predicted {regime} - Staying in cash"}
 
-    elif regime == "RANGE":
-        sig = vwap_scalper_signal(bars, open_position=open_position)
-        return {**base, **sig}
+    else:
+        # FLAT, RANGE
+        return {**base, "action": "HOLD", "reason": f"AI predicted {regime} - Holding"}
 
-    elif regime == "BREAKOUT":
-        sig = breakout_signal(bars, direction="up")
-        return {**base, **sig}
-
-    else:  # FLAT
-        return {**base, "strategy": "flat", "action": "HOLD",
-                "reason": "FLAT regime -- waiting for clear signal"}
